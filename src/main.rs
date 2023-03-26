@@ -1,25 +1,35 @@
-use clap::Args;
-use clap::Parser;
-use clap::Subcommand;
+pub mod cli {
+    use std::fmt;
 
-#[derive(Parser)]
-#[command(author, version)]
-#[command(about = "budge - a simple CLI to manage your budget in a TSV")]
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
+    #[derive(Debug)]
+    pub struct InvalidCommandError {
+        input: String,
+    }
 
-#[derive(Subcommand)]
-enum Commands {
-    /// Reverses a string
-    Add(Add),
-}
+    impl fmt::Display for InvalidCommandError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "\"{}\" is not a valid command", self.input)
+        }
+    }
 
-#[derive(Args)]
-struct Add {
-    /// The string to reverse
-    string: Option<String>,
+    #[derive(Debug)]
+    pub enum Command {
+        Add(Add),
+    }
+
+    impl Command {
+        pub fn from_str(cmd: &str) -> Result<Self, InvalidCommandError> {
+            match cmd.to_lowercase().as_str() {
+                "add" => Ok(Command::Add(Add {})),
+                _ => Err(InvalidCommandError {
+                    input: cmd.to_string(),
+                }),
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct Add {}
 }
 
 use std::env;
@@ -32,4 +42,6 @@ fn main() {
 
     let data_dir = dirs::data_dir().expect("could not get user's data directory");
     println!("{}", data_dir.display());
+
+    println!("{:?}", cli::Command::from_str("add"));
 }
